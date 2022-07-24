@@ -4,7 +4,7 @@ import "./Ownable.sol";
 contract TimedSalary is Ownable{
     using SafeMath for uint;
     uint private cooldown;
-    uint private timePaid;
+    uint private timePaid = block.timePaid;
     mapping(address => uint)balances;
     mapping(address => bool)isWorker;
     mapping(address => uint)balanceRecieved;
@@ -14,14 +14,15 @@ contract TimedSalary is Ownable{
     function RecieveETH()external payable returns(bool success){
      require(Workers.length != 0,"Add some workers first");
      require(cooldown != 0,"Set a Cooldown First");
+     require(Paid == false,"Salaries have not been paid yet");
+     require(address(this).balance != 0,"Deposit Salaries First");
+     Paid = false;
     if(block.timestamp >= timePaid.add(cooldown)){
      for(uint i = 0; i<Workers.length;i++){
      balances[Workers[i]] = msg.value.div(Workers.length);
      balanceRecieved[Workers[i]] = balanceRecieved[Workers[i]].add(balances[Workers[i]]);
      balances[Workers[i]] = 0;
-     payable(Workers[i]).send(balances[Workers[i]]);      
-     timePaid = block.timestamp; 
-     Paid = false;
+     payable(Workers[i]).send(balances[Workers[i]]);       
      }
     }
     Paid = true;
