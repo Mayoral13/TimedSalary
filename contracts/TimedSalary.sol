@@ -23,7 +23,7 @@ contract TimedSalary is Ownable{
      balanceRecieved[Workers[i]] = balanceRecieved[Workers[i]].add(balances[Workers[i]]);
      balances[Workers[i]] = 0;
      payable(Workers[i]).send(balances[Workers[i]]);       
-     }
+     } 
     }
     Paid = true;
     return true;
