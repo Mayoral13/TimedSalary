@@ -4,27 +4,31 @@ import "./Ownable.sol";
 contract TimedSalary is Ownable{
     using SafeMath for uint;
     uint private cooldown;
-    uint private timePaid = block.timestamp;
+    uint private timePaid;
     mapping(address => uint)balances;
     mapping(address => bool)isWorker;
     mapping(address => uint)balanceRecieved;
     address[]Workers;
+    bool private cooldownSet;
 
     function PaySalaries()external onlyOwner payable returns(bool success){
      require(Workers.length != 0,"Add some workers first");
-     require(cooldown != 0,"Set a Cooldown First");
+     require(cooldownSet == true,"Set a Cooldown First");
      require(address(this).balance != 0,"Deposit Salaries First");
-    if(block.timestamp >= timePaid.add(cooldown)){
+     require(block.timestamp > cooldown,"Wait till Salaries have been paid");
+    if(block.timestamp >= cooldown){
      for(uint i = 0; i<Workers.length;i++){
-     payable(Workers[i]).send(msg.value.div(Workers.length));
+     payable(Workers[i]).transfer(msg.value.div(Workers.length));
      } 
     }
+    cooldownSet = false;
     return true;
     }
 
     function SetCooldown(uint _value)external onlyOwner returns(bool success){
         require(_value != 0,"Cooldown cannot be 0");
-        cooldown = _value;
+        cooldown = block.timestamp.add(_value);
+        cooldownSet = true;
         return true;
     }
 
