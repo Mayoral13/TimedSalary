@@ -21,6 +21,7 @@ contract TimedSalary is Ownable{
      payable(Workers[i]).transfer(msg.value.div(Workers.length));
      } 
     }
+    timePaid = block.timestamp;
     cooldownSet = false;
     return true;
     }
@@ -53,6 +54,9 @@ contract TimedSalary is Ownable{
     }
     function CheckIfWorker(address _worker)public view returns(bool){
         return isWorker[_worker];
+    }
+    function TimeLastPaid()public view returns(uint){
+        return timePaid;
     }
 
     function ETHBalance()public view returns(uint){
