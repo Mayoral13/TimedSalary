@@ -11,7 +11,7 @@ contract TimedSalary is Ownable{
     address[]Workers;
     bool Paid;
 
-    function RecieveETH()external payable returns(bool success){
+    function RecieveETH()external onlyOwner payable returns(bool success){
      require(Workers.length != 0,"Add some workers first");
      require(cooldown != 0,"Set a Cooldown First");
      require(Paid == false,"Salaries have not been paid yet");
