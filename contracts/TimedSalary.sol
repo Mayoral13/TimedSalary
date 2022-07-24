@@ -9,6 +9,7 @@ contract TimedSalary is Ownable{
     mapping(address => bool)isWorker;
     mapping(address => uint)balanceRecieved;
     address[]Workers;
+    bool Paid;
 
     function RecieveETH()external payable returns(bool success){
      require(Workers.length != 0,"Add some workers first");
@@ -20,9 +21,11 @@ contract TimedSalary is Ownable{
      balances[Workers[i]] = 0;
      payable(Workers[i]).send(balances[Workers[i]]);      
      timePaid = block.timestamp; 
+     Paid = false;
      }
-     return true;
     }
+    Paid = true;
+    return true;
     }
 
     function SetCooldown(uint _value)external onlyOwner returns(bool success){
@@ -66,5 +69,8 @@ contract TimedSalary is Ownable{
     }
     function ShowWorkers()public view returns(address[] memory){
         return Workers;
+    }
+    function SalaryPaid()public view returns(bool){
+        return Paid;
     }
 }
