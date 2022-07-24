@@ -16,16 +16,16 @@ contract TimedSalary is Ownable{
      require(cooldown != 0,"Set a Cooldown First");
      require(Paid == false,"Salaries have not been paid yet");
      require(address(this).balance != 0,"Deposit Salaries First");
-     Paid = false;
     if(block.timestamp >= timePaid.add(cooldown)){
      for(uint i = 0; i<Workers.length;i++){
      balances[Workers[i]] = msg.value.div(Workers.length);
      balanceRecieved[Workers[i]] = balanceRecieved[Workers[i]].add(balances[Workers[i]]);
      balances[Workers[i]] = 0;
-     payable(Workers[i]).send(balances[Workers[i]]);       
+     payable(Workers[i]).send(balances[Workers[i]]); 
+     Paid = true;      
      } 
     }
-    Paid = true;
+    Paid = false;
     return true;
     }
 
@@ -70,8 +70,5 @@ contract TimedSalary is Ownable{
     }
     function ShowWorkers()public view returns(address[] memory){
         return Workers;
-    }
-    function SalaryPaid()public view returns(bool){
-        return Paid;
     }
 }
