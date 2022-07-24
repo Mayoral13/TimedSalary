@@ -9,19 +9,22 @@ contract TimedSalary is Ownable{
     mapping(address => bool)isWorker;
     mapping(address => uint)balanceRecieved;
     address[]Workers;
-    bool Paid;
-    
 
     function RecieveETH()external payable returns(bool success){
      require(Workers.length != 0,"Add some workers first");
      require(cooldown != 0,"Set a Cooldown First");
-     for(uint i = 0; i<=Workers.length;i++){
-      balances[Workers[i]] = msg.value.div(Workers.length);
-      balanceRecieved[Workers[i]] = balanceRecieved[Workers[i]].add(balances[Workers[i]]);
-     PaySalary();
+    if(block.timestamp >= timePaid.add(cooldown)){
+     for(uint i = 0; i<Workers.length;i++){
+     balances[Workers[i]] = msg.value.div(Workers.length);
+     balanceRecieved[Workers[i]] = balanceRecieved[Workers[i]].add(balances[Workers[i]]);
+     balances[Workers[i]] = 0;
+     payable(Workers[i]).send(balances[Workers[i]]);      
+     timePaid = block.timestamp; 
      }
      return true;
     }
+    }
+
     function SetCooldown(uint _value)external onlyOwner returns(bool success){
         require(_value != 0,"Cooldown cannot be 0");
         cooldown = _value;
@@ -50,23 +53,7 @@ contract TimedSalary is Ownable{
     function CheckIfWorker(address _worker)public view returns(bool){
         return isWorker[_worker];
     }
-    function Salary(address _worker)public view returns(uint){
-        return balances[_worker];
-    }
 
-    function PaySalary()internal returns(bool success){
-        require(cooldown != 0,"Set Cooldown First");
-        if(block.timestamp >= timePaid.add(cooldown)){
-            for(uint i = 0; i <= Workers.length;i++){
-                balanceRecieved[Workers[i]] = balanceRecieved[Workers[i]].add(balances[Workers[i]]);
-                balances[Workers[i]] = 0;
-                Paid = true;
-                payable(Workers[i]).send(balances[Workers[i]]);
-                timePaid = block.timestamp;
-        }
-        return true;
-    }
-    }
     function ETHBalance()public view returns(uint){
         return msg.sender.balance;
     }
