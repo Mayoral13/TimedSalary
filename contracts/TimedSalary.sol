@@ -5,36 +5,39 @@ contract TimedSalary is Ownable{
     using SafeMath for uint;
     uint private cooldown;
     uint private timePaid;
-    mapping(address => uint)balances;
-    mapping(address => bool)isWorker;
-    mapping(address => uint)balanceRecieved;
     address[]Workers;
     bool private cooldownSet;
+    bool private Paid;
+    mapping(address => bool)isWorker;
+    mapping(address => uint)Recieved;
 
     function PaySalaries()external onlyOwner payable returns(bool success){
      require(Workers.length != 0,"Add some workers first");
-     require(cooldownSet == true,"Set a Cooldown First");
-     require(address(this).balance != 0,"Deposit Salaries First");
-     require(block.timestamp > cooldown,"Wait till Salaries have been paid");
-    if(block.timestamp >= cooldown){
+     require(block.timestamp > cooldown,"Wait till cooldown is reached");
+     require(cooldownSet == true,"Set cooldown first");
+     require(Paid == false,"Wait till Salaries have been Paid");
+     require(msg.value != 0,"Dont be so stingy");
      for(uint i = 0; i<Workers.length;i++){
+     Recieved[Workers[i]] = Recieved[Workers[i]].add((msg.value).div(Workers.length)); 
      payable(Workers[i]).transfer(msg.value.div(Workers.length));
-     } 
     }
     timePaid = block.timestamp;
+    Paid = true;
     cooldownSet = false;
     return true;
     }
 
     function SetCooldown(uint _value)external onlyOwner returns(bool success){
         require(_value != 0,"Cooldown cannot be 0");
+        require(cooldownSet == false,"Wait till cooldown is reached");
         cooldown = block.timestamp.add(_value);
         cooldownSet = true;
+        Paid = false;
         return true;
     }
 
     function AddWorkers(address _worker)external onlyOwner returns(bool success){
-        require(address(this).balance == 0,"Contract must be empty");
+        require(cooldownSet == false,"Wait till salaries have been paid");
         require(isWorker[_worker] == false,"Already a worker");
         Workers.push(_worker);
         isWorker[_worker] = true;
@@ -42,8 +45,8 @@ contract TimedSalary is Ownable{
     }
     function RemoveWorker(address _worker)external onlyOwner returns(bool success){
         require(isWorker[_worker] == true,"Must be a worker");
-        require(address(this).balance == 0,"Contract must be empty");
-        for(uint i = 0; i<= Workers.length;i++){
+        require(cooldownSet == false,"Wait till cooldown is reached");
+        for(uint i = 0; i< Workers.length;i++){
             if(_worker == Workers[i]){
                 Workers.pop();
                 Workers.length-1;
@@ -58,13 +61,12 @@ contract TimedSalary is Ownable{
     function TimeLastPaid()public view returns(uint){
         return timePaid;
     }
-
-    function ETHBalance()public view returns(uint){
-        return msg.sender.balance;
+    function SalariesPaid()public view returns(bool success){
+        return Paid;
     }
-
-    function ETHRecieved()public view returns(uint){
-        return balanceRecieved[msg.sender];
+    function SalariesRecieved(address _user)public view returns(uint){
+        require(CheckIfWorker(_user) == true,"User not a worker");
+        return Recieved[_user];
     }
     function ContractBalance()public view returns(uint){
         return address(this).balance;
